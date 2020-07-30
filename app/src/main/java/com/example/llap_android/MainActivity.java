@@ -1,17 +1,30 @@
 package com.example.llap_android;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.hardware.camera2.CameraAccessException;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.view.View;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.Socket;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Objects;
+
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toolbar;
@@ -23,6 +36,9 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.widget.TextView;
 import android.os.Bundle;
+
+import com.example.llap_android.Video.StringLogger;
+import com.example.llap_android.Video.VideoRecord;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -132,7 +148,10 @@ public class MainActivity extends AppCompatActivity {
     private Socket datasocket;
     private OutputStream datastream;
 
-
+    private Activity mActivity;
+    private StringLogger mVLogger;
+    private StringLogger mDLogger;
+    private VideoRecord mRecord;
 
 
     @Override
@@ -153,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
             wavefreqs[i]=startfreq+i*freqinter;
             wavelength[i]=soundspeed/wavefreqs[i]*1000;
         }
-
+        mActivity = this;
 
         disx=0;
         disy=250;
@@ -167,10 +186,39 @@ public class MainActivity extends AppCompatActivity {
         mylog("initialization finished at time: " + System.currentTimeMillis());
         btnPlayRecord.setOnClickListener(new OnClickListener()
         {
+            @RequiresApi(api = Build.VERSION_CODES.Q)
             @Override
             public void onClick(View v)
             {
+                String currentDate = new SimpleDateFormat("MM-dd-mm:ss", Locale.getDefault()).format(new Date());
+                String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
+                try {
+                    mVLogger = new StringLogger(fprefix+"-vlog.txt");
+                    mDLogger = new StringLogger(fprefix+"-dlog.txt");
+                    mRecord = new VideoRecord(fprefix+"-video.mp4",mActivity);
 
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mRecord.setOnImageWrittenCallback(new VideoRecord.OnImageWritten() {
+                    @Override
+                    public void callback() {
+                        String s = SystemClock.uptimeMillis()+"\n";
+                        try {
+                            mVLogger.log(s);
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                try {
+                    mRecord.start();
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 btnPlayRecord.setEnabled(false);
                 btnStopRecord.setEnabled(true);
 
@@ -211,7 +259,13 @@ public class MainActivity extends AppCompatActivity {
                 }catch (Exception e) {
                     //TODOL handle this
                 }
-
+                mRecord.stop();
+                try {
+                    mVLogger.close();
+                    mDLogger.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -383,14 +437,15 @@ public class MainActivity extends AppCompatActivity {
                         }
                         trace_x[tracecount]= (int) Math.round((disy*micdis1*micdis1-disx*micdis2*micdis2+disx*disy*(disy-disx))/2/(disx*micdis2+disy*micdis1));
                         trace_y[tracecount]=(int) Math.round(Math.sqrt(  Math.abs((disx*disx-micdis1*micdis1)*(disy*disy-micdis2*micdis2)*((micdis1+micdis2)*(micdis1+micdis2)-(disx-disy)*(disx-disy))  )  )/2/(disx*micdis2+disy*micdis1) );
-                        mylog("x="+trace_x[tracecount]+"y="+trace_y[tracecount]);
+                        System.out.println("x="+trace_x[tracecount]+"y="+trace_y[tracecount]);
+                        try {
+                            mDLogger.log(SystemClock.uptimeMillis()+","+"x:"+disx+",y:"+disy+"\n");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         tracecount++;
 
                     }
-
-
-
-
                     if(Math.abs(displaydis-disx)>2||(tracecount>10)) {
                         Message msg = new Message();
                         msg.what = 0;
