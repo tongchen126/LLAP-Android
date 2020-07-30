@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
 import android.os.Build;
 import android.os.Bundle;
@@ -39,6 +40,8 @@ import android.os.Bundle;
 
 import com.example.llap_android.Video.StringLogger;
 import com.example.llap_android.Video.VideoRecord;
+
+import com.github.mikephil.charting.charts.LineChart;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -148,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
     private Socket datasocket;
     private OutputStream datastream;
 
+    private ChartView mChartView;
+
     private Activity mActivity;
     private StringLogger mVLogger;
     private StringLogger mDLogger;
@@ -184,6 +189,13 @@ public class MainActivity extends AppCompatActivity {
         mylog( AudioDistance.initdownconvert(sampleRateInHz, numfreq, wavefreqs));
 
         mylog("initialization finished at time: " + System.currentTimeMillis());
+
+        LineChart lineChart = (LineChart) findViewById(R.id.chart);
+        mChartView = new ChartView(lineChart, "BP", Color.BLUE);
+        mChartView.setYAxis(10, 0,10);
+        mChartView.setDescription("");
+
+
         btnPlayRecord.setOnClickListener(new OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -288,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
                 if(isCalibrated) {
                     texDistance_x.setText(String.format("x=%04.2f", disx / 20) + "cm");
                     texDistance_y.setText(String.format("y=%04.2f", disy / 20) + "cm");
+                    mChartView.addEntry(disx / 20);
                 }
                 else
                 {texDistance_x.setText("Calibrating...");
