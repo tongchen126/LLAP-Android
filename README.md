@@ -12,3 +12,11 @@ For more details, please check our paper and our video in Mobicom 2016.
 Our work is reported by MIT TECH REVIEW: "This App Lets You Control Your Phone Using Sonar".
 
 llapfly
+
+Contributor:
+
+LLAP Original Author,
+
+Video recording and data logging: CT,
+
+Chart Display: HJX
