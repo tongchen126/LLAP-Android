@@ -1,5 +1,6 @@
 package com.example.llap_android;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
     private StringLogger mVLogger;
     private StringLogger mDLogger;
     private VideoRecord mRecord;
-
+    private Handler updateviews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -192,10 +193,36 @@ public class MainActivity extends AppCompatActivity {
 
         LineChart lineChart = (LineChart) findViewById(R.id.chart);
         mChartView = new ChartView(lineChart, "BP", Color.BLUE);
-        mChartView.setYAxis(10, 0,10);
         mChartView.setDescription("");
 
+        updateviews = new Handler(getMainLooper(), new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg)
+            {
+                if(msg.what== 0)
+                {
+                    if(isCalibrated) {
+                        texDistance_x.setText(String.format("x=%04.2f", disx / 20) + "cm");
+                        texDistance_y.setText(String.format("y=%04.2f", disy / 20) + "cm");
+                        int chart_max,chart_min;
+                        int idisx = ((int)disx / 20);
+                        chart_max = idisx + 5;
+                        chart_min = idisx > 5 ? idisx - 5 : 0;
+                        mChartView.setYAxis(chart_max, chart_min,10);
+                        mChartView.addEntry(disx / 20);
+                    }
+                    else
+                    {texDistance_x.setText("Calibrating...");
+                        texDistance_y.setText("");
 
+                    }
+                    mylog("count" + tracecount);
+                    mytrace.setTrace(trace_x, trace_y, tracecount);
+                    tracecount=0;
+                }
+                return false;
+            };
+        });
         btnPlayRecord.setOnClickListener(new OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -290,31 +317,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(sysname,information);
         }
     }
-    private Handler updateviews =new Handler()
-    {
-        @Override
-        public void handleMessage(Message msg)
-        {
-            if(msg.what== 0)
-            {
-                if(isCalibrated) {
-                    texDistance_x.setText(String.format("x=%04.2f", disx / 20) + "cm");
-                    texDistance_y.setText(String.format("y=%04.2f", disy / 20) + "cm");
-                    mChartView.addEntry(disx / 20);
-                }
-                else
-                {texDistance_x.setText("Calibrating...");
-                    texDistance_y.setText("");
 
-                }
-                mylog("count" + tracecount);
-                mytrace.setTrace(trace_x, trace_y, tracecount);
-                tracecount=0;
-            }
-        }
-
-
-    };
     class ThreadInstantPlay extends Thread
     {
         @Override
