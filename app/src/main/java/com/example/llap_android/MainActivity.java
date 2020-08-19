@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,6 +40,7 @@ import android.media.MediaRecorder;
 import android.widget.TextView;
 import android.os.Bundle;
 
+import com.example.llap_android.Video.ImageAuxiliaries;
 import com.example.llap_android.Video.StringLogger;
 import com.example.llap_android.Video.VideoRecord;
 
@@ -153,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
     private OutputStream datastream;
 
     private ChartView mChartView;
-
+    private ChartView mPPGView;
     private Activity mActivity;
     private StringLogger mVLogger;
     private StringLogger mDLogger;
@@ -194,7 +196,11 @@ public class MainActivity extends AppCompatActivity {
         LineChart lineChart = (LineChart) findViewById(R.id.chart);
         mChartView = new ChartView(lineChart, "BP", Color.BLUE);
         mChartView.setDescription("");
+        LineChart ppgChart = (LineChart) findViewById(R.id.chart_ppg);
+        mPPGView = new ChartView(ppgChart,"PPG",Color.GREEN);
+        mPPGView.setDescription("");
 
+        ImageAuxiliaries.init(this);
         updateviews = new Handler(getMainLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg)
@@ -234,21 +240,41 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
                     mDLogger = new StringLogger(fprefix+"-dlog.txt");
-                    mRecord = new VideoRecord(fprefix+"-video.mp4",mActivity);
+                    mRecord = new VideoRecord(mActivity);
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 mRecord.setOnImageWrittenCallback(new VideoRecord.OnImageWritten() {
                     @Override
-                    public void callback() {
+                    public void callback(Image image) {
+
                         String s = SystemClock.uptimeMillis()+"\n";
+                        ImageAuxiliaries imgaux = ImageAuxiliaries.getInstance();
+                        double gavg = 0; //gavg is the average of green channel
                         try {
-                            mVLogger.log(s);
+                            gavg = imgaux.averageGreen(image);
+                            //Problem occured here
+                            float min = gavg > 10 ? (int) (gavg - 10) : 0;
+                            float max = (float) (gavg + 10);
+                            mPPGView.setYAxis((float)max, (float)min,10);
+                            mPPGView.addEntry(0.0);
+                            //Problem end
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            mVLogger.log(gavg+" "+s);
                         }
                         catch (IOException e){
                             e.printStackTrace();
                         }
+
+
+
+
                     }
                 });
                 try {

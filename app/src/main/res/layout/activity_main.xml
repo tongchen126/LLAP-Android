@@ -23,12 +23,12 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="80dp"
+        android:layout_marginEnd="84dp"
         android:text="Stop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.262" />
+        app:layout_constraintVertical_bias="0.878" />
 
     <TextView
         android:id="@+id/textView"
@@ -47,26 +47,31 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="92dp"
+        android:layout_marginEnd="112dp"
         android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.375" />
+        app:layout_constraintVertical_bias="0.938" />
 
     <com.example.llap_android.TraceView
         android:id="@+id/trace"
-        android:layout_width="407dp"
-        android:layout_height="418dp"
+        android:layout_width="217dp"
+        android:layout_height="27dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="false"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/chart"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.024"
+        tools:ignore="MissingClass" /><![CDATA[
+
+    >
+        ]]>
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart"
@@ -76,7 +81,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.9"
+        app:layout_constraintVertical_bias="0.681"
         tools:ignore="MissingClass" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart_ppg"
+        android:layout_width="357dp"
+        android:layout_height="277dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.161"
+        tools:ignore="MissingClass"></com.github.mikephil.charting.charts.LineChart>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
