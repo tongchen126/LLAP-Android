@@ -38,19 +38,21 @@ public class VideoRecord {
                 image.close();
                 return;
             }
-            try {
-                synchronized (mState) {
-                    if (mState != VIDEORECORD_STATE.STATE_STARTED){
-                        image.close();
-                        return;
-                    }
-                    if (mCB != null)
-                        mCB.callback(image);
+            synchronized (mState) {
+                if (mState != VIDEORECORD_STATE.STATE_STARTED) {
                     image.close();
+                    return;
                 }
+            }
+            try {
+                if (mCB != null)
+                    mCB.callback(image);
             }
             catch (Exception e){
                 e.printStackTrace();
+            }
+            finally {
+                image.close();
             }
         }
     };

@@ -71,28 +71,31 @@
         tools:ignore="MissingClass" /><![CDATA[
 
     >
-        ]]>
+
+
+    ]]>
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart"
-        android:layout_width="357dp"
-        android:layout_height="277dp"
+        android:layout_width="354dp"
+        android:layout_height="261dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.681"
+        app:layout_constraintVertical_bias="0.711"
         tools:ignore="MissingClass" />
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart_ppg"
-        android:layout_width="357dp"
-        android:layout_height="277dp"
+        android:layout_width="344dp"
+        android:layout_height="257dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.582"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.161"
+        app:layout_constraintVertical_bias="0.126"
         tools:ignore="MissingClass"></com.github.mikephil.charting.charts.LineChart>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
