@@ -20,7 +20,7 @@ public class VideoRecord {
     public static final int DEFAULT_FPS = 30;
     public static final int DEFAULT_MAXIMAGES = 10;
     public static final int DEFAULT_SKIPPED_IMAGES = 60;
-    public static final int DEFAULT_FACING = CameraCharacteristics.LENS_FACING_BACK;
+    public static final int DEFAULT_FACING = CameraCharacteristics.LENS_FACING_FRONT;
     private Camera2Provider mCamera;
     private ImageReader mImageReader;
     private OnImageWritten mCB;

@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
         mChartView = new ChartView(lineChart, "BP", Color.BLUE);
         mChartView.setDescription("");
         LineChart ppgChart = (LineChart) findViewById(R.id.chart_ppg);
-        mPPGView = new ChartView(ppgChart,"PPG",Color.GREEN);
+        mPPGView = new ChartView(ppgChart,"PPG",Color.RED);
         mPPGView.setDescription("");
 
         ImageAuxiliaries.init(this);
@@ -212,15 +212,15 @@ public class MainActivity extends AppCompatActivity {
                         texDistance_y.setText(String.format("y=%04.2f", disy / 20) + "cm");
                         int chart_max,chart_min;
                         int idisx = ((int)disx / 20);
-                        chart_max = idisx + 5;
-                        chart_min = idisx > 5 ? idisx - 5 : 0;
+                        chart_max = idisx + 1;
+                        chart_min = idisx;
                         mChartView.setYAxis(chart_max, chart_min,10);
                         mChartView.addEntry(disx / 20);
                     }
                     else
-                    {texDistance_x.setText("Calibrating...");
+                    {
+                        texDistance_x.setText("Calibrating...");
                         texDistance_y.setText("");
-
                     }
                     mylog("count" + tracecount);
                     mytrace.setTrace(trace_x, trace_y, tracecount);
@@ -246,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 mRecord.setOnImageWrittenCallback(new VideoRecord.OnImageWritten() {
+                    int i = 0;
                     @Override
                     public void callback(Image image) {
 
@@ -258,7 +259,9 @@ public class MainActivity extends AppCompatActivity {
                             float min = gavg > 10 ? (int) (gavg - 10) : 0;
                             float max = (float) (gavg + 10);
                             mPPGView.setYAxis((float)max, (float)min,10);
-                            mPPGView.addEntry(0.0);
+                            if (i % 3 == 0)
+                                mPPGView.addEntry(gavg);
+                            i+=1;
                             //Problem end
 
                         } catch (Exception e) {
