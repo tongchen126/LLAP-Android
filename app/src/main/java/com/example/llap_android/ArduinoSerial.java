@@ -46,20 +46,23 @@ public class ArduinoSerial {
                 byte[] serialRead = new byte[15];
                 while (state==STATE.STARTED) {
                     try {
+                        int read = dataInput.read(serialRead);
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
                         String s=time.format(new Date());
-                        int read = dataInput.read(serialRead);
                         String str = new String(serialRead).substring(0,read);
                         String[] split_str = str.split(",");
                         try {
                             if (split_str.length == 3 && available != null) {
                                 String strip = str.replaceAll("\r|\n","");
-                                logger.log(strip+","+s+"\n");
                                 split_str=strip.split(",");
+                                if (split_str.length!=3){
+                                    throw new Exception("Error String");
+                                }
                                 int i1 = new Integer(split_str[0]);
                                 int i2 = new Integer(split_str[1]);
                                 int i3 = new Integer(split_str[2]);
                                 available.onAvailable(new int[]{i1, i2, i3});
+                                logger.log(i1+","+i2+","+i3+","+s+"\n");
                                 System.out.println("Data Available " + strip);
                             }
                         }catch (Exception e){

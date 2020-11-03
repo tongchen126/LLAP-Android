@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 public class VideoRecord {
     public static final int DEFAULT_WIDTH = 1920;
@@ -46,7 +47,7 @@ public class VideoRecord {
             }
             try {
                 if (mCB != null)
-                    mCB.callback(image);
+                    mCB.callback(image,new Date());
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -89,7 +90,7 @@ public class VideoRecord {
         mCB = cb;
     }
     public interface OnImageWritten{
-        void callback(Image image);
+        void callback(Image image, Date date);
     };
     private enum VIDEORECORD_STATE {
         STATE_INITED,

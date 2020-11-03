@@ -252,10 +252,10 @@ public class MainActivity extends AppCompatActivity {
                 mRecord.setOnImageWrittenCallback(new VideoRecord.OnImageWritten() {
                     int i = 0;
                     @Override
-                    public void callback(Image image) {
+                    public void callback(Image image,Date date) {
                //         String s = SystemClock.uptimeMillis()+"\n";
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
-                        String s=time.format(new Date());
+                        String s=time.format(date);
                         ImageAuxiliaries imgaux = ImageAuxiliaries.getInstance();
                         double gavg = 0; //gavg is the average of green channel
                         try {
