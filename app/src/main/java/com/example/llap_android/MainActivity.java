@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
     private StringLogger mDLogger;
     private VideoRecord mRecord;
     private Handler updateviews;
-
+    private ArduinoSerial mArduinoSerial;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -214,8 +214,11 @@ public class MainActivity extends AppCompatActivity {
                         int idisx = ((int)disx / 20);
                         chart_max = idisx + 1;
                         chart_min = idisx;
+                        /*
                         mChartView.setYAxis(chart_max, chart_min,10);
                         mChartView.addEntry(disx / 20);
+
+                         */
                     }
                     else
                     {
@@ -235,12 +238,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                String currentDate = new SimpleDateFormat("MM-dd-mm:ss", Locale.getDefault()).format(new Date());
+                String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss", Locale.getDefault()).format(new Date());
                 String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
                 try {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
                     mDLogger = new StringLogger(fprefix+"-dlog.txt");
                     mRecord = new VideoRecord(mActivity);
+                    mArduinoSerial = new ArduinoSerial("/dev/ttyUSB0",fprefix+"-alog.txt",115200);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -249,8 +253,9 @@ public class MainActivity extends AppCompatActivity {
                     int i = 0;
                     @Override
                     public void callback(Image image) {
-
-                        String s = SystemClock.uptimeMillis()+"\n";
+               //         String s = SystemClock.uptimeMillis()+"\n";
+                        SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+                        String s=time.format(new Date());
                         ImageAuxiliaries imgaux = ImageAuxiliaries.getInstance();
                         double gavg = 0; //gavg is the average of green channel
                         try {
@@ -259,8 +264,11 @@ public class MainActivity extends AppCompatActivity {
                             float min = gavg > 10 ? (int) (gavg - 10) : 0;
                             float max = (float) (gavg + 10);
                             mPPGView.setYAxis((float)max, (float)min,10);
+                            /*
                             if (i % 3 == 0)
                                 mPPGView.addEntry(gavg);
+
+                            */
                             i+=1;
                             //Problem end
 
@@ -269,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         try {
-                            mVLogger.log(gavg+" "+s);
+                            mVLogger.log(gavg+","+s+"\n");
                         }
                         catch (IOException e){
                             e.printStackTrace();
@@ -280,6 +288,13 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+                mArduinoSerial.setOnSerialDataAvailable(new ArduinoSerial.onSerialDataAvailable() {
+                    @Override
+                    public void onAvailable(int[] data) {
+                        int ppg = data[2];
+                        return;
+                    }
+                });
                 try {
                     mRecord.start();
                 } catch (CameraAccessException e) {
@@ -287,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                mArduinoSerial.start();
                 btnPlayRecord.setEnabled(false);
                 btnStopRecord.setEnabled(true);
 
@@ -328,6 +344,7 @@ public class MainActivity extends AppCompatActivity {
                     //TODOL handle this
                 }
                 mRecord.stop();
+                mArduinoSerial.stop();
                 try {
                     mVLogger.close();
                     mDLogger.close();
