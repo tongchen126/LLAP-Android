@@ -60,6 +60,8 @@ public class ArduinoSerial {
                                 }
                                 int i1 = new Integer(split_str[0]);
                                 int i2 = new Integer(split_str[1]);
+                                if (split_str[2].length()>3)
+                                    split_str[2]=split_str[2].substring(0,3);
                                 int i3 = new Integer(split_str[2]);
                                 available.onAvailable(new int[]{i1, i2, i3});
                                 logger.log(i1+","+i2+","+i3+","+s+"\n");

@@ -16,10 +16,10 @@ import java.io.IOException;
 import java.util.Date;
 
 public class VideoRecord {
-    public static final int DEFAULT_WIDTH = 1920;
-    public static final int DEFAULT_HEIGHT = 1080;
+    public static final int DEFAULT_WIDTH = 1280;
+    public static final int DEFAULT_HEIGHT = 720;
     public static final int DEFAULT_FPS = 30;
-    public static final int DEFAULT_MAXIMAGES = 20;
+    public static final int DEFAULT_MAXIMAGES = 30;
     public static final int DEFAULT_SKIPPED_IMAGES = 60;
     public static final int DEFAULT_FACING = CameraCharacteristics.LENS_FACING_FRONT;
     private Camera2Provider mCamera;
