@@ -19,7 +19,7 @@ public class VideoRecord {
     public static final int DEFAULT_WIDTH = 1920;
     public static final int DEFAULT_HEIGHT = 1080;
     public static final int DEFAULT_FPS = 30;
-    public static final int DEFAULT_MAXIMAGES = 10;
+    public static final int DEFAULT_MAXIMAGES = 20;
     public static final int DEFAULT_SKIPPED_IMAGES = 60;
     public static final int DEFAULT_FACING = CameraCharacteristics.LENS_FACING_FRONT;
     private Camera2Provider mCamera;
@@ -32,6 +32,7 @@ public class VideoRecord {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireLatestImage();
+            Date date = new Date();
             if (image == null)
                 return;
             if (i <= DEFAULT_SKIPPED_IMAGES){
@@ -47,7 +48,7 @@ public class VideoRecord {
             }
             try {
                 if (mCB != null)
-                    mCB.callback(image,new Date());
+                    mCB.callback(image,date);
             }
             catch (Exception e){
                 e.printStackTrace();

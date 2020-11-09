@@ -48,8 +48,8 @@ public class ArduinoSerial {
                     try {
                         int read = dataInput.read(serialRead);
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
-                        String s=time.format(new Date());
                         String str = new String(serialRead).substring(0,read);
+                        String s=time.format(new Date());
                         String[] split_str = str.split(",");
                         try {
                             if (split_str.length == 3 && available != null) {
