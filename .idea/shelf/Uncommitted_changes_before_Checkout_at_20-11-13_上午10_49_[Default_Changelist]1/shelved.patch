@@ -1,0 +1,35 @@
+Index: app/src/main/java/com/example/llap_android/ArduinoSerial.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.llap_android;\nimport android.renderscript.ScriptGroup;\nimport android.serialport.*;\n\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.io.OutputStream;\nimport java.text.SimpleDateFormat;\nimport java.util.Date;\n\nimport com.example.llap_android.Video.StringLogger;\npublic class ArduinoSerial {\n    private String device;\n    private String saved_file;\n    private SerialPort serialPort;\n    private int baud;\n    private static int DEFAULT_BAUD = 115200;\n    private InputStream dataInput;\n    private OutputStream dataOutput;\n    private StringLogger logger;\n    private Thread backGroundThread;\n    private onSerialDataAvailable available;\n    private enum STATE {\n        INITIALIZED,\n        STARTING,\n        STARTED,\n        STOPPING,\n        STOPPED,\n    }\n    private STATE state;\n    public ArduinoSerial(String _device,String _saved_file,int baud) throws IOException {\n        device=_device;\n        saved_file=_saved_file;\n        serialPort = new SerialPort(new File(device),baud);\n        dataInput=serialPort.getInputStream();\n        dataOutput=serialPort.getOutputStream();\n        logger=new StringLogger(saved_file);\n        backGroundThread=new Thread(new Runnable() {\n            @Override\n            public void run() {\n                if (state!=STATE.STARTING){\n                    return;\n                }\n                state=STATE.STARTED;\n                byte[] serialRead = new byte[15];\n                while (state==STATE.STARTED) {\n                    try {\n                        int read = dataInput.read(serialRead);\n                        SimpleDateFormat time = new SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss-SSS\");\n                        String str = new String(serialRead).substring(0,read);\n                        String s=time.format(new Date());\n                        String[] split_str = str.split(\",\");\n                        try {\n                            if (split_str.length == 3 && available != null) {\n                                String strip = str.replaceAll(\"\\r|\\n\",\"\");\n                                split_str=strip.split(\",\");\n                                if (split_str.length!=3){\n                                    throw new Exception(\"Error String\");\n                                }\n                                int i1 = new Integer(split_str[0]);\n                                int i2 = new Integer(split_str[1]);\n                                if (split_str[2].length()>3)\n                                    split_str[2]=split_str[2].substring(0,3);\n                                int i3 = new Integer(split_str[2]);\n                                available.onAvailable(new int[]{i1, i2, i3});\n                                logger.log(i1+\",\"+i2+\",\"+i3+\",\"+s+\"\\n\");\n                                System.out.println(\"Data Available \" + strip);\n                            }\n                        }catch (Exception e){\n                            System.out.println(\"Error String:\"+ str+\",\"+split_str[0]+\",\"+split_str[1]+\",\"+split_str[2]);\n                            e.printStackTrace();\n                        }\n                    } catch (IOException e) {\n                        e.printStackTrace();\n                    }\n                }\n                try {\n                    logger.close();\n                } catch (IOException e) {\n                    e.printStackTrace();\n                }\n            }\n        });\n        state = STATE.INITIALIZED;\n    }\n    interface onSerialDataAvailable{\n        void onAvailable(int[] data);\n    }\n    public void setOnSerialDataAvailable(onSerialDataAvailable avail){\n        available=avail;\n    }\n    public void start(){\n        state=STATE.STARTING;\n        backGroundThread.start();\n    }\n    public void stop(){\n        state=STATE.STOPPING;\n        try {\n            backGroundThread.join();\n        } catch (InterruptedException e) {\n            e.printStackTrace();\n        }\n    }\n}\n
+===================================================================
+--- app/src/main/java/com/example/llap_android/ArduinoSerial.java	(revision e4e9387c04740f57526077269268c4536f7be25c)
++++ app/src/main/java/com/example/llap_android/ArduinoSerial.java	(date 1605095582000)
+@@ -50,8 +50,15 @@
+                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+                         String str = new String(serialRead).substring(0,read);
+                         String s=time.format(new Date());
+-                        String[] split_str = str.split(",");
++                        if (str.split("\r\n").length!=1)
++                            continue;
+                         try {
++                            str = str.replaceAll("\r|\n","");
++                            int i = new Integer(str);
++                            available.onAvailable(new int[]{i});
++                            logger.log(i+","+s+"\n");
++                            System.out.println("Data Available " + str);
++                            /*
+                             if (split_str.length == 3 && available != null) {
+                                 String strip = str.replaceAll("\r|\n","");
+                                 split_str=strip.split(",");
+@@ -67,8 +74,9 @@
+                                 logger.log(i1+","+i2+","+i3+","+s+"\n");
+                                 System.out.println("Data Available " + strip);
+                             }
++
++                             */
+                         }catch (Exception e){
+-                            System.out.println("Error String:"+ str+","+split_str[0]+","+split_str[1]+","+split_str[2]);
+                             e.printStackTrace();
+                         }
+                     } catch (IOException e) {
