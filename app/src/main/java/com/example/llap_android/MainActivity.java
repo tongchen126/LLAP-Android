@@ -291,7 +291,6 @@ public class MainActivity extends AppCompatActivity {
                 mArduinoSerial.setOnSerialDataAvailable(new ArduinoSerial.onSerialDataAvailable() {
                     @Override
                     public void onAvailable(int[] data) {
-                        int ppg = data[2];
                         return;
                     }
                 });

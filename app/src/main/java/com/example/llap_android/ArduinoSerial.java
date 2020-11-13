@@ -50,8 +50,15 @@ public class ArduinoSerial {
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
                         String str = new String(serialRead).substring(0,read);
                         String s=time.format(new Date());
-                        String[] split_str = str.split(",");
+                        if (str.split("\r\n").length!=1)
+                            continue;
                         try {
+                            str = str.replaceAll("\r|\n","");
+                            int i = new Integer(str);
+                            available.onAvailable(new int[]{i});
+                            logger.log(i+","+s+"\n");
+                            System.out.println("Data Available " + str);
+                            /*
                             if (split_str.length == 3 && available != null) {
                                 String strip = str.replaceAll("\r|\n","");
                                 split_str=strip.split(",");
@@ -67,8 +74,10 @@ public class ArduinoSerial {
                                 logger.log(i1+","+i2+","+i3+","+s+"\n");
                                 System.out.println("Data Available " + strip);
                             }
+
+                             */
                         }catch (Exception e){
-                            System.out.println("Error String:"+ str+","+split_str[0]+","+split_str[1]+","+split_str[2]);
+                            System.out.println("Error String:"+ str);
                             e.printStackTrace();
                         }
                     } catch (IOException e) {
