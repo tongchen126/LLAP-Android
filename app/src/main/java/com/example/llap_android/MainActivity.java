@@ -27,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.util.Log;
 import android.widget.Button;
@@ -162,6 +164,12 @@ public class MainActivity extends AppCompatActivity {
     private VideoRecord mRecord;
     private Handler updateviews;
     private ArduinoSerial mArduinoSerial;
+
+    //Elapsed Time showing
+    private Handler mTimerHandler;
+    private Timer mTimer;
+    private TimerTask mTimerTask;
+    private TextView mTimerText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -231,6 +239,24 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return false;
             };
+        });
+        mTimerText = (TextView)findViewById(R.id.textView4);
+        mTimerHandler=new Handler(getMainLooper(), new Handler.Callback() {
+            Date sdate;
+            @Override
+            public boolean handleMessage(@NonNull Message msg) {
+                Date date = new Date();
+                if (msg.what==0) {
+                    sdate = new Date();
+                    long delta = date.getTime()-sdate.getTime();
+                    mTimerText.setText(Long.toString(delta));
+                }
+                if (msg.what == 1){
+                    long delta = (date.getTime()-sdate.getTime())/1000;
+                    mTimerText.setText(Long.toString(delta));
+                }
+                return false;
+            }
         });
         btnPlayRecord.setOnClickListener(new OnClickListener()
         {
@@ -324,6 +350,21 @@ public class MainActivity extends AppCompatActivity {
 
                 new ThreadInstantPlay().start();
                 new ThreadInstantRecord().start();
+
+
+                mTimer = new Timer();
+
+                mTimerTask = new TimerTask() {
+                    int first=0;
+                    @Override
+                    public void run() {
+                        Message msg = new Message();
+                        msg.what=first==0?0:1;
+                        first+=1;
+                        mTimerHandler.sendMessage(msg);
+                    }
+                };
+                mTimer.schedule(mTimerTask,0,500);
             //    new ThreadSocket().start();
             }
         });
@@ -350,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                mTimer.cancel();
             }
         });
 
