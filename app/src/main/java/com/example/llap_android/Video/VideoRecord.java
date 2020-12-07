@@ -26,6 +26,7 @@ public class VideoRecord {
     private ImageReader mImageReader;
     private OnImageWritten mCB;
     private StringLogger mLogger;
+    private VideoWriterV2 mWriter;
     private VIDEORECORD_STATE mState;
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         private int i = 0;
@@ -47,25 +48,32 @@ public class VideoRecord {
                 }
             }
             try {
+                mWriter.pushImage(image);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+            /*
+            image=null;
+            try {
                 if (mCB != null)
                     mCB.callback(image,date);
             }
             catch (Exception e){
                 e.printStackTrace();
             }
-            finally {
-                image.close();
-            }
+            */
         }
     };
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public VideoRecord(Activity context) throws IOException {
-        this(context,DEFAULT_WIDTH,DEFAULT_HEIGHT,DEFAULT_FPS);
+    public VideoRecord(Activity context,String file) throws IOException {
+        this(file,context,DEFAULT_WIDTH,DEFAULT_HEIGHT,DEFAULT_FPS);
     }
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public VideoRecord( Activity context, int width, int height, int fps) throws IOException {
+    public VideoRecord(String file,Activity context, int width, int height, int fps) throws IOException {
         mCamera = new Camera2Provider(context);
         mImageReader = ImageReader.newInstance(width,height,ImageFormat.YUV_420_888,DEFAULT_MAXIMAGES);
+        mWriter = new VideoWriterV2(file,ImageFormat.YUV_420_888,width,height,fps,DEFAULT_MAXIMAGES);
         mImageReader.setOnImageAvailableListener(mOnImageAvailableListener,mCamera.getmCameraHandler());
         mCamera.addSurface(mImageReader.getSurface());
         mState = VIDEORECORD_STATE.STATE_INITED;
@@ -75,6 +83,7 @@ public class VideoRecord {
             if (mState != VIDEORECORD_STATE.STATE_INITED)
                 return false;
             mCamera.openCamera(DEFAULT_FACING);
+            mWriter.start();
             mState = VIDEORECORD_STATE.STATE_STARTED;
         }
         return true;
@@ -83,6 +92,7 @@ public class VideoRecord {
         synchronized (mState) {
             if (mState == VIDEORECORD_STATE.STATE_STARTED) {
                 mCamera.closeCamera();
+                mWriter.stop();
                 mState = VIDEORECORD_STATE.STATE_STOPPED;
             }
         }

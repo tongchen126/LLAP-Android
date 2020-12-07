@@ -42,7 +42,6 @@ import android.media.MediaRecorder;
 import android.widget.TextView;
 import android.os.Bundle;
 
-import com.example.llap_android.Video.ImageAuxiliaries;
 import com.example.llap_android.Video.StringLogger;
 import com.example.llap_android.Video.VideoRecord;
 
@@ -208,7 +207,6 @@ public class MainActivity extends AppCompatActivity {
         mPPGView = new ChartView(ppgChart,"PPG",Color.RED);
         mPPGView.setDescription("");
 
-        ImageAuxiliaries.init(this);
         updateviews = new Handler(getMainLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg)
@@ -269,8 +267,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
                     mDLogger = new StringLogger(fprefix+"-dlog.txt");
-                    mRecord = new VideoRecord(mActivity);
-                    mArduinoSerial = new ArduinoSerial("/dev/ttyUSB0",fprefix+"-alog.txt",115200);
+                    mRecord = new VideoRecord(mActivity,fprefix+"-video.mp4");
+                    mArduinoSerial = new ArduinoSerial("/dev/ttyACM0",fprefix+"-alog.txt",115200);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -282,36 +280,12 @@ public class MainActivity extends AppCompatActivity {
                //         String s = SystemClock.uptimeMillis()+"\n";
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
                         String s=time.format(date);
-                        ImageAuxiliaries imgaux = ImageAuxiliaries.getInstance();
-                        double gavg = 0; //gavg is the average of green channel
                         try {
-                            gavg = imgaux.averageGreen(image);
-                            //Problem occured here
-                            float min = gavg > 10 ? (int) (gavg - 10) : 0;
-                            float max = (float) (gavg + 10);
-                            mPPGView.setYAxis((float)max, (float)min,10);
-                            /*
-                            if (i % 3 == 0)
-                                mPPGView.addEntry(gavg);
-
-                            */
-                            i+=1;
-                            //Problem end
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        try {
-                            mVLogger.log(gavg+","+s+"\n");
+                            mVLogger.log(s+"\n");
                         }
                         catch (IOException e){
                             e.printStackTrace();
                         }
-
-
-
-
                     }
                 });
                 mArduinoSerial.setOnSerialDataAvailable(new ArduinoSerial.onSerialDataAvailable() {
