@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.view.SurfaceView;
 import android.view.View;
 
 import java.io.File;
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         texDistance_y =(TextView) findViewById(R.id.textView2);
         mytrace = (TraceView) findViewById(R.id.trace);
         soundspeed =331.3 + 0.606 *temperature;
-
+        final SurfaceView surfaceView = (SurfaceView)findViewById(R.id.surfaceView);
 
         for(int i=0;i<numfreq;i++)
         {
@@ -268,7 +269,8 @@ public class MainActivity extends AppCompatActivity {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
                     mDLogger = new StringLogger(fprefix+"-dlog.txt");
                     mRecord = new VideoRecord(mActivity,fprefix+"-video.mp4");
-                    mArduinoSerial = new ArduinoSerial("/dev/ttyACM0",fprefix+"-alog.txt",115200);
+                    mRecord.addSurface(surfaceView.getHolder().getSurface());
+                    mArduinoSerial = new ArduinoSerial("/dev/ttyUSB0",fprefix+"-alog.txt",115200);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -294,6 +296,8 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                 });
+
+
                 try {
                     mRecord.start();
                 } catch (CameraAccessException e) {

@@ -8,6 +8,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
+import android.view.Surface;
 
 import androidx.annotation.RequiresApi;
 
@@ -16,11 +17,11 @@ import java.io.IOException;
 import java.util.Date;
 
 public class VideoRecord {
-    public static final int DEFAULT_WIDTH = 1280;
-    public static final int DEFAULT_HEIGHT = 720;
+    public static final int DEFAULT_WIDTH = 1920;
+    public static final int DEFAULT_HEIGHT = 1080;
     public static final int DEFAULT_FPS = 30;
     public static final int DEFAULT_MAXIMAGES = 30;
-    public static final int DEFAULT_SKIPPED_IMAGES = 60;
+    public static final int DEFAULT_SKIPPED_IMAGES = -1;
     public static final int DEFAULT_FACING = CameraCharacteristics.LENS_FACING_FRONT;
     private Camera2Provider mCamera;
     private ImageReader mImageReader;
@@ -48,21 +49,16 @@ public class VideoRecord {
                 }
             }
             try {
-                mWriter.pushImage(image);
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-            /*
-            image=null;
-            try {
                 if (mCB != null)
                     mCB.callback(image,date);
             }
             catch (Exception e){
                 e.printStackTrace();
             }
-            */
+            finally {
+                image.close();
+            }
+
         }
     };
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -76,8 +72,12 @@ public class VideoRecord {
         mWriter = new VideoWriterV2(file,ImageFormat.YUV_420_888,width,height,fps,DEFAULT_MAXIMAGES);
         mImageReader.setOnImageAvailableListener(mOnImageAvailableListener,mCamera.getmCameraHandler());
         mCamera.addSurface(mImageReader.getSurface());
+        mCamera.addSurface(mWriter.getmMediaRecorderr().getSurface());
         mState = VIDEORECORD_STATE.STATE_INITED;
     };
+    public void addSurface(Surface surface){
+        mCamera.addSurface(surface);
+    }
     public boolean start() throws CameraAccessException, IOException {
         synchronized (mState) {
             if (mState != VIDEORECORD_STATE.STATE_INITED)
