@@ -287,14 +287,17 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             gavg = imgaux.averageGreen(image);
                             //Problem occured here
+                            /*
                             float min = gavg > 10 ? (int) (gavg - 10) : 0;
                             float max = (float) (gavg + 10);
                             mPPGView.setYAxis((float)max, (float)min,10);
-                            /*
+
                             if (i % 3 == 0)
                                 mPPGView.addEntry(gavg);
 
-                            */
+
+                             */
+
                             i+=1;
                             //Problem end
 

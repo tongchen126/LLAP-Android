@@ -49,7 +49,7 @@ public class SoundPlayer {
 
     public void play() {
         //16 bit because it's supported by all phones
-        audioTrack.play();
+     //   audioTrack.play();
     }
     public void pause() {
         audioTrack.pause();

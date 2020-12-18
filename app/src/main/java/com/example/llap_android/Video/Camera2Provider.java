@@ -35,6 +35,7 @@ public class Camera2Provider {
     private Handler mCameraHandler;
     private CameraDevice mCameraDevice;
     private CaptureRequest.Builder mBuilder;
+    private static int FLASH_MODE = CaptureRequest.FLASH_MODE_TORCH;
     //private Range<Integer> mFPSAvailable;
     public Handler getmCameraHandler(){
         return mCameraHandler;
@@ -85,6 +86,7 @@ public class Camera2Provider {
             mCameraDevice = camera;
             try {
                 mBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+                mBuilder.set(CaptureRequest.FLASH_MODE,FLASH_MODE);
        //         mBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,mFPSAvailable);
                 for (Surface s:mSurfaces) {
                     mBuilder.addTarget(s);
