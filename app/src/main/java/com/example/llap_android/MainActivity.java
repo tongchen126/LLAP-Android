@@ -9,6 +9,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.media.Image;
 import android.os.Build;
@@ -160,16 +163,17 @@ public class MainActivity extends AppCompatActivity {
     private ChartView mPPGView;
     private Activity mActivity;
     private StringLogger mVLogger;
-    private StringLogger mDLogger;
+    //private StringLogger mDLogger;
     private VideoRecord mRecord;
     private Handler updateviews;
-    private ArduinoSerial mArduinoSerial;
 
     //Elapsed Time showing
     private Handler mTimerHandler;
     private Timer mTimer;
     private TimerTask mTimerTask;
     private TextView mTimerText;
+    private MotionSensorRecord motionSensorRecord;
+    private StringLogger mSLogger;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -266,15 +270,35 @@ public class MainActivity extends AppCompatActivity {
             {
                 String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss", Locale.getDefault()).format(new Date());
                 String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
+                motionSensorRecord = new MotionSensorRecord((SensorManager) getSystemService(SENSOR_SERVICE), Sensor.TYPE_LINEAR_ACCELERATION);
                 try {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
-                    mDLogger = new StringLogger(fprefix+"-dlog.txt");
+                 //   mDLogger = new StringLogger(fprefix+"-dlog.txt");
+                    mSLogger = new StringLogger(fprefix+"-slog.txt");
+
                     mRecord = new VideoRecord(mActivity);
-                    mArduinoSerial = new ArduinoSerial("/dev/ttyUSB0",fprefix+"-alog.txt",115200);
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                motionSensorRecord.registeronSensorChangedEvent(new MotionSensorRecord.onSensorChangedEvent() {
+                    @Override
+                    public void onSensorChanged(SensorEvent event) {
+                        SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+                        String s=time.format(new Date());
+                        try {
+                            mSLogger.log(s + "," + event.values[0] + "," + event.values[1] + "," + event.values[2]+"\n");
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+                    }
+                });
                 mRecord.setOnImageWrittenCallback(new VideoRecord.OnImageWritten() {
                     int i = 0;
                     @Override
@@ -317,12 +341,6 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-                mArduinoSerial.setOnSerialDataAvailable(new ArduinoSerial.onSerialDataAvailable() {
-                    @Override
-                    public void onAvailable(int[] data) {
-                        return;
-                    }
-                });
                 try {
                     mRecord.start();
                 } catch (CameraAccessException e) {
@@ -330,7 +348,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                mArduinoSerial.start();
                 btnPlayRecord.setEnabled(false);
                 btnStopRecord.setEnabled(true);
 
@@ -376,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
+                motionSensorRecord.unregisteronSensorChangedEvent();
                 btnPlayRecord.setEnabled(true);
                 btnStopRecord.setEnabled(false);
                 blnPlayRecord=false;
@@ -387,10 +405,10 @@ public class MainActivity extends AppCompatActivity {
                     //TODOL handle this
                 }
                 mRecord.stop();
-                mArduinoSerial.stop();
                 try {
                     mVLogger.close();
-                    mDLogger.close();
+                 //   mDLogger.close();
+                    mSLogger.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -544,11 +562,14 @@ public class MainActivity extends AppCompatActivity {
                         trace_x[tracecount]= (int) Math.round((disy*micdis1*micdis1-disx*micdis2*micdis2+disx*disy*(disy-disx))/2/(disx*micdis2+disy*micdis1));
                         trace_y[tracecount]=(int) Math.round(Math.sqrt(  Math.abs((disx*disx-micdis1*micdis1)*(disy*disy-micdis2*micdis2)*((micdis1+micdis2)*(micdis1+micdis2)-(disx-disy)*(disx-disy))  )  )/2/(disx*micdis2+disy*micdis1) );
                         System.out.println("x="+trace_x[tracecount]+"y="+trace_y[tracecount]);
+                        /*
                         try {
                             mDLogger.log(SystemClock.uptimeMillis()+","+"x:"+disx+",y:"+disy+"\n");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+
+                         */
                         tracecount++;
 
                     }
