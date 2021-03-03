@@ -43,13 +43,11 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.widget.TextView;
-import android.os.Bundle;
 
 import com.example.llap_android.Video.ImageAuxiliaries;
 import com.example.llap_android.Video.StringLogger;
 import com.example.llap_android.Video.VideoRecord;
 
-import com.github.mikephil.charting.charts.LineChart;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -206,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
         mylog("initialization finished at time: " + System.currentTimeMillis());
 
         LineChart lineChart = (LineChart) findViewById(R.id.chart);
-        mChartView = new ChartView(lineChart, "BP", Color.BLUE);
+        mChartView = new ChartView(lineChart, "ACC", Color.BLUE);
         mChartView.setDescription("");
         LineChart ppgChart = (LineChart) findViewById(R.id.chart_ppg);
         mPPGView = new ChartView(ppgChart,"PPG",Color.RED);
@@ -268,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss", Locale.getDefault()).format(new Date());
+                String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss-SSS", Locale.getDefault()).format(new Date());
                 String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
                 motionSensorRecord = new MotionSensorRecord((SensorManager) getSystemService(SENSOR_SERVICE), Sensor.TYPE_LINEAR_ACCELERATION);
                 try {
@@ -288,6 +286,9 @@ public class MainActivity extends AppCompatActivity {
                         String s=time.format(new Date());
                         try {
                             mSLogger.log(s + "," + event.values[0] + "," + event.values[1] + "," + event.values[2]+"\n");
+                            float y_acc = event.values[1];
+                            mChartView.setYAxis(5, -5,10);
+                            mChartView.addEntry(y_acc);
                         }
                         catch (Exception e){
                             e.printStackTrace();
@@ -310,27 +311,17 @@ public class MainActivity extends AppCompatActivity {
                         double gavg = 0; //gavg is the average of green channel
                         try {
                             gavg = imgaux.averageGreen(image);
-                            //Problem occured here
-                            /*
-                            float min = gavg > 10 ? (int) (gavg - 10) : 0;
+                            float min = (float)(gavg - 10);
                             float max = (float) (gavg + 10);
                             mPPGView.setYAxis((float)max, (float)min,10);
-
-                            if (i % 3 == 0)
-                                mPPGView.addEntry(gavg);
-
-
-                             */
-
+                            mPPGView.addEntry(gavg);
                             i+=1;
-                            //Problem end
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
 
                         try {
-                            mVLogger.log(gavg+","+s+"\n");
+                            mVLogger.log(s+","+gavg+"\n");
                         }
                         catch (IOException e){
                             e.printStackTrace();
