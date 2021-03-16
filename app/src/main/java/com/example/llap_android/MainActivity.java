@@ -48,6 +48,7 @@ import com.example.llap_android.Video.ImageAuxiliaries;
 import com.example.llap_android.Video.StringLogger;
 import com.example.llap_android.Video.VideoRecord;
 
+import com.github.mikephil.charting.charts.LineChart;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -285,7 +286,8 @@ public class MainActivity extends AppCompatActivity {
                         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
                         String s=time.format(new Date());
                         try {
-                            mSLogger.log(s + "," + event.values[0] + "," + event.values[1] + "," + event.values[2]+"\n");
+//                            mSLogger.log(s + "," + event.values[0] + "," + event.values[1] + "," + event.values[2]+"\n");
+                            mSLogger.log(s + "," + event.values[1] + "\n");
                             float y_acc = event.values[1];
                             mChartView.setYAxis(5, -5,10);
                             mChartView.addEntry(y_acc);
