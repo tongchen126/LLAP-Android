@@ -267,6 +267,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
+         //       String cmd = "chroot /sdcard/mnt /bin/bash /root/workspace/calc_bp.sh && exit 0\n";
+        //        String result = SuExecAndResult.Exec(cmd);
+
                 String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss-SSS", Locale.getDefault()).format(new Date());
                 String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
                 motionSensorRecord = new MotionSensorRecord((SensorManager) getSystemService(SENSOR_SERVICE), Sensor.TYPE_LINEAR_ACCELERATION);
