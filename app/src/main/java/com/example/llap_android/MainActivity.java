@@ -173,6 +173,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTimerText;
     private MotionSensorRecord motionSensorRecord;
     private StringLogger mSLogger;
+    private TextView mBPText;
+    DataRecordAndBpCalculate mBP;
+    private Handler mBPHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -210,36 +213,12 @@ public class MainActivity extends AppCompatActivity {
         LineChart ppgChart = (LineChart) findViewById(R.id.chart_ppg);
         mPPGView = new ChartView(ppgChart,"PPG",Color.RED);
         mPPGView.setDescription("");
-
+        mBPText = (TextView)findViewById(R.id.textView3);
         ImageAuxiliaries.init(this);
         updateviews = new Handler(getMainLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg)
             {
-                if(msg.what== 0)
-                {
-                    if(isCalibrated) {
-                        texDistance_x.setText(String.format("x=%04.2f", disx / 20) + "cm");
-                        texDistance_y.setText(String.format("y=%04.2f", disy / 20) + "cm");
-                        int chart_max,chart_min;
-                        int idisx = ((int)disx / 20);
-                        chart_max = idisx + 1;
-                        chart_min = idisx;
-                        /*
-                        mChartView.setYAxis(chart_max, chart_min,10);
-                        mChartView.addEntry(disx / 20);
-
-                         */
-                    }
-                    else
-                    {
-                        texDistance_x.setText("Calibrating...");
-                        texDistance_y.setText("");
-                    }
-                    mylog("count" + tracecount);
-                    mytrace.setTrace(trace_x, trace_y, tracecount);
-                    tracecount=0;
-                }
                 return false;
             };
         });
@@ -261,6 +240,18 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+        mBPHandler =new Handler(getMainLooper(), new Handler.Callback() {
+            Date sdate;
+            @Override
+            public boolean handleMessage(@NonNull Message msg) {
+                if (msg.what==0) {
+                    mBPText.setText(Integer.toString(msg.arg1));
+                }
+                else
+                    mBPText.setText("---");
+                return false;
+            }
+        });
         btnPlayRecord.setOnClickListener(new OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -269,9 +260,10 @@ public class MainActivity extends AppCompatActivity {
             {
          //       String cmd = "chroot /sdcard/mnt /bin/bash /root/workspace/calc_bp.sh && exit 0\n";
         //        String result = SuExecAndResult.Exec(cmd);
-
+                mBP = new DataRecordAndBpCalculate();
                 String currentDate = new SimpleDateFormat("MM-dd-HH-mm-ss-SSS", Locale.getDefault()).format(new Date());
-                String fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator+currentDate;
+                String _fprefix = Objects.requireNonNull(mActivity.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)).getAbsolutePath()+ File.separator;
+                String fprefix = _fprefix+currentDate;
                 motionSensorRecord = new MotionSensorRecord((SensorManager) getSystemService(SENSOR_SERVICE), Sensor.TYPE_LINEAR_ACCELERATION);
                 try {
                     mVLogger = new StringLogger(fprefix+"-vlog.txt");
@@ -291,9 +283,10 @@ public class MainActivity extends AppCompatActivity {
                         try {
 //                            mSLogger.log(s + "," + event.values[0] + "," + event.values[1] + "," + event.values[2]+"\n");
                             mSLogger.log(s + "," + event.values[1] + "\n");
+                            mBP.OnAccEvent(s + "," + event.values[1] + "\n");
                             float y_acc = event.values[1];
-                            mChartView.setYAxis(5, -5,10);
-                            mChartView.addEntry(y_acc);
+                //            mChartView.setYAxis(5, -5,10);
+                 //           mChartView.addEntry(y_acc);
                         }
                         catch (Exception e){
                             e.printStackTrace();
@@ -318,8 +311,8 @@ public class MainActivity extends AppCompatActivity {
                             gavg = imgaux.averageGreen(image);
                             float min = (float)(gavg - 10);
                             float max = (float) (gavg + 10);
-                            mPPGView.setYAxis((float)max, (float)min,10);
-                            mPPGView.addEntry(gavg);
+                       //     mPPGView.setYAxis((float)max, (float)min,10);
+                       //     mPPGView.addEntry(gavg);
                             i+=1;
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -327,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
 
                         try {
                             mVLogger.log(s+","+gavg+"\n");
+                            mBP.OnPPGEvent(s+","+gavg+"\n");
                         }
                         catch (IOException e){
                             e.printStackTrace();
@@ -350,22 +344,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-                playBufSize = AudioTrack.getMinBufferSize(sampleRateInHz,
-                        channelConfig, encodingBitrate);
 
-                recBufSize = AudioRecord.getMinBufferSize(sampleRateInHz,
-                        channelConfig, encodingBitrate);
-                mylog( "recbuffersize:" + recBufSize);
-                audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                        sampleRateInHz, channelConfig, encodingBitrate, recBufSize);
-
-                if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
-                    mylog("Record Initialized");
-                }
-                mylog("channels:" + audioRecord.getChannelConfiguration());
-
-                new ThreadInstantPlay().start();
-                new ThreadInstantRecord().start();
 
 
                 mTimer = new Timer();
@@ -381,6 +360,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
                 mTimer.schedule(mTimerTask,0,500);
+                mBP.start(mBPHandler,_fprefix);
             //    new ThreadSocket().start();
             }
         });
@@ -394,12 +374,7 @@ public class MainActivity extends AppCompatActivity {
                 btnStopRecord.setEnabled(false);
                 blnPlayRecord=false;
                 isCalibrated=false;
-                try{
-                    datastream.close();
-                    datasocket.close();
-                }catch (Exception e) {
-                    //TODOL handle this
-                }
+
                 mRecord.stop();
                 try {
                     mVLogger.close();
@@ -409,6 +384,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 mTimer.cancel();
+                mBP.stop();
             }
         });
 
@@ -417,8 +393,6 @@ public class MainActivity extends AppCompatActivity {
     {
         if(logenabled)
         {
-
-            Log.i(sysname,information);
         }
     }
 
@@ -427,11 +401,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run()
         {
-            SoundPlayer Player= new SoundPlayer(sampleRateInHz,numfreq,wavefreqs);
-            blnPlayRecord=true;
-            Player.play();
-            while (blnPlayRecord==true){}
-            Player.stop();
         }
     }
 
@@ -442,199 +411,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            short[] bsRecord = new short[recBufSize * 2];
-            byte[] networkbuf = new byte[recBufSize * 4];
-            int datacount = 0;
-            int curpos = 0;
-            long starttime,endtime;
-            String c_result;
-
-            while (blnPlayRecord == false) {
-            }
-            try {
-                audioRecord.startRecording();
-            }
-            catch (Exception e){
-                String a = e.toString();
-                mylog(e.toString());
-            }
-            /*
-             *
-             */
-            while (blnPlayRecord) {
-                /*
-                 *
-                 */
-                int line = audioRecord.read(bsRecord, 0, frameSize * 2);
-                datacount = datacount + line / 2;
-                now=now+1;
-
-                mylog("recevied data:" + line + " at time" + System.currentTimeMillis());
-                if (line >= frameSize) {
-
-                    //get baseband
-
-
-                    starttime=System.currentTimeMillis();
-                    mylog(AudioDistance.getbaseband(bsRecord, baseband, line / 2));
-                    endtime=System.currentTimeMillis();
-
-                    mylog("time used forbaseband:"+(endtime-starttime));
-
-                    starttime=System.currentTimeMillis();
-                    mylog( AudioDistance.removedc(baseband, baseband_nodc, dcvalue));
-                    endtime=System.currentTimeMillis();
-
-                    mylog("time used LEVD:"+(endtime-starttime));
-
-                    starttime=System.currentTimeMillis();
-                    mylog( AudioDistance.getdistance(baseband_nodc, phasechange, dischange, freqpower));
-                    endtime=System.currentTimeMillis();
-
-                    mylog("time used distance:"+(endtime-starttime));
-
-
-                    if(!isCalibrated&&Math.abs(dischange[0])<0.05&&now-lastcalibration>10) {
-
-
-                        c_result=AudioDistance.calibrate(baseband);
-                        mylog(c_result) ;
-                        lastcalibration=now;
-                        if(c_result.equals("calibrate OK")){
-                            isCalibrated=true;
-                        }
-
-                    }
-                    if(isCalibrated) {
-                        starttime = System.currentTimeMillis();
-                        mylog(AudioDistance.getidftdistance(baseband_nodc, idftdis));
-                        endtime = System.currentTimeMillis();
-
-                        mylog("time used idftdistance:" + (endtime - starttime));
-
-                        //keep difference stable;
-
-                        double disdiff,dissum;
-                        disdiff=dischange[0]-dischange[1];
-                        dissum=dischange[0]+dischange[1];
-                        dischangehist=dischangehist*0.5+disdiff*0.5;
-                        dischange[0]=(dissum+dischangehist)/2;
-                        dischange[1]=(dissum-dischangehist)/2;
-
-                        disx=disx+dischange[0];
-                        if(disx>1000)
-                            disx=1000;
-                        if(disx<0)
-                            disx=0;
-                        disy=disy+dischange[1];
-                        if(disy>1000)
-                            disy=1000;
-                        if(disy<0)
-                            disy=0;
-                        if(Math.abs(dischange[0])<0.2&&Math.abs(dischange[1])<0.2&&Math.abs(idftdis[0])>0.1&&Math.abs(idftdis[1])>0.1)
-                        {
-                            disx=disx*(1-distrend)+idftdis[0]*distrend;
-                            disy=disy*(1-distrend)+idftdis[1]*distrend;
-                        }
-                        if(disx<micdis1)
-                            disx=micdis1;
-                        if(disy<micdis2)
-                            disy=micdis2;
-                        if(Math.abs(disx-disy)>(micdis1+micdis2))
-                        {
-                            double tempsum=disx+disy;
-                            if(disx>disy)
-                            {
-                                disx=(tempsum+micdis1+micdis2)/2;
-                                disy=(tempsum-micdis1-micdis2)/2;
-
-                            }
-                            else
-                            {
-                                disx=(tempsum-micdis1-micdis2)/2;
-                                disy=(tempsum+micdis1+micdis2)/2;
-                            }
-                        }
-                        trace_x[tracecount]= (int) Math.round((disy*micdis1*micdis1-disx*micdis2*micdis2+disx*disy*(disy-disx))/2/(disx*micdis2+disy*micdis1));
-                        trace_y[tracecount]=(int) Math.round(Math.sqrt(  Math.abs((disx*disx-micdis1*micdis1)*(disy*disy-micdis2*micdis2)*((micdis1+micdis2)*(micdis1+micdis2)-(disx-disy)*(disx-disy))  )  )/2/(disx*micdis2+disy*micdis1) );
-                        System.out.println("x="+trace_x[tracecount]+"y="+trace_y[tracecount]);
-                        /*
-                        try {
-                            mDLogger.log(SystemClock.uptimeMillis()+","+"x:"+disx+",y:"+disy+"\n");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                         */
-                        tracecount++;
-
-                    }
-                    if(Math.abs(displaydis-disx)>2||(tracecount>10)) {
-                        Message msg = new Message();
-                        msg.what = 0;
-                        displaydis=disx;
-                        updateviews.sendMessage(msg);
-                    }
-                    if(!isCalibrated)
-                    {
-                        Message msg = new Message();
-                        msg.what = 0;
-                        updateviews.sendMessage(msg);
-                    }
-
-
-
-
-                    curpos = curpos + line / 2;
-                    if (curpos > coscycle)
-                        curpos = curpos - coscycle;
-                    if(sendbaseband&&datastream != null)
-                    {
-                        int j=0;
-                        for (int i = 0; i < 2*numfreq*2*frameSize/cicdec; i++) {
-                            //sum = sum + bsRecord[i];
-                            networkbuf[j++] = (byte) (((short) baseband_nodc[i]) & 0xFF);
-                            networkbuf[j++] = (byte) (((short) baseband_nodc[i]) >> 8);
-                        }
-                        //Log.i("wavedemo", "data sum:" + sum);
-
-                        if (datastream != null) {
-                            try {
-                                datastream.write(networkbuf, 0, j);
-                                mylog( "socket write" + j);
-                            } catch (Exception e) {
-                                // TODO: handle this
-                                mylog( "socket error" + e);
-                            }
-                        }
-
-                    }
-
-                    if (sendDatatoMatlab&&datastream != null) {
-                        int j = 0;
-                        int sum = 0;
-                        for (int i = 0; i < line; i++) {
-                            //sum = sum + bsRecord[i];
-                            networkbuf[j++] = (byte) (bsRecord[i] & 0xFF);
-                            networkbuf[j++] = (byte) (bsRecord[i] >> 8);
-                        }
-                        //Log.i("wavedemo", "data sum:" + sum);
-
-                        if (datastream != null) {
-                            try {
-                                datastream.write(networkbuf, 0, j);
-                                mylog( "socket write" + j);
-                            } catch (Exception e) {
-                                // TODO: handle this
-                                mylog("socket error" + e);
-                            }
-                        }
-                    }
-                }
-                mylog("endtime" + System.currentTimeMillis());
-
-            }
-            audioRecord.stop();
 
         }
     }

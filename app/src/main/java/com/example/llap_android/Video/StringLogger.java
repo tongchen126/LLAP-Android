@@ -9,11 +9,13 @@ import java.io.RandomAccessFile;
 
 public class StringLogger {
     private FileWriter mOutput;
+    private String filename;
     public StringLogger(String file) throws IOException {
         File _f = new File(file);
         if (_f.exists()){
             _f.delete();
         }
+        filename = file;
         mOutput = new FileWriter(file,false);
     }
     public void log(String data) throws IOException {
@@ -21,5 +23,8 @@ public class StringLogger {
     }
     public void close() throws IOException {
         mOutput.close();
+    }
+    public String getFilename(){
+        return filename;
     }
 }
